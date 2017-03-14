@@ -1,2 +1,2 @@
-# from pyloss import *
+from pyloss import *
 from tripletlosslayer import *

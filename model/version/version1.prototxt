@@ -13,7 +13,7 @@ layer {
     phase: TRAIN
   }
   transform_param {
-    scale: 1
+    scale: 20
     # scale: 1
   }
   data_param {
@@ -83,10 +83,10 @@ layer {
     kernel_size: 5
     stride: 1
     weight_filler {
-      type: "xavier"
+#      type: "xavier"
 #      type: "constant"
 #      value: 1
-#       type: "uniform"
+       type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -106,9 +106,49 @@ layer {
   }
 }
 layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv2_b"
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+#       type: "xavier"
+#      type: "constant"
+#      value: 1
+    type: "uniform"
+    }
+    bias_filler {
+#      type: "constant"
+    type: "uniform"
+    }
+  }
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
   name: "ip1"
   type: "InnerProduct"
-  bottom: "pool1"
+  bottom: "pool2"
   top: "ip1"
   param {
     name: "ip1_w"
@@ -121,10 +161,10 @@ layer {
   inner_product_param {
     num_output: 500
     weight_filler {
-      type: "xavier"
+#      type: "xavier"
 #      type: "constant"
 #      value: 1
-#        type: "uniform"
+        type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -154,10 +194,10 @@ layer {
   inner_product_param {
     num_output: 10
     weight_filler {
-      type: "xavier"
+#      type: "xavier"
 #      type: "constant"
 #      value: 1
-#    type: "uniform"
+    type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -181,10 +221,10 @@ layer {
   inner_product_param {
     num_output: 2
     weight_filler {
-       type: "xavier"
+#       type: "xavier"
 #      type: "constant"
 #      value: 1
-#    type: "uniform"
+    type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -196,8 +236,8 @@ layer {
 layer {
   name: "l2_norm_1"
   type: "Python"
-  bottom: "feat"
-#  bottom: "ip1"
+#  bottom: "feat"
+  bottom: "conv2"
   top: "l2_feat"
   python_param {
     module: "pyloss"
@@ -227,10 +267,10 @@ layer {
     kernel_size: 5
     stride: 1
     weight_filler {
-       type: "xavier"
+#       type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -250,9 +290,49 @@ layer {
   }
 }
 layer {
+  name: "conv2_p"
+  type: "Convolution"
+  bottom: "pool1_p"
+  top: "conv2_p"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv2_b"
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+#       type: "xavier"
+#      type: "constant"
+#      value: 1
+type: "uniform"
+    }
+    bias_filler {
+#      type: "constant"
+      type: "uniform"
+    }
+  }
+}
+layer {
+  name: "pool2_p"
+  type: "Pooling"
+  bottom: "conv2_p"
+  top: "pool2_p"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
   name: "ip1_p"
   type: "InnerProduct"
-  bottom: "pool1_p"
+  bottom: "pool2_p"
   top: "ip1_p"
   param {
     name: "ip1_w"
@@ -265,10 +345,10 @@ layer {
   inner_product_param {
     num_output: 500
     weight_filler {
-       type: "xavier"
+#       type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -298,10 +378,10 @@ layer {
   inner_product_param {
     num_output: 10
     weight_filler {
-       type: "xavier"
+#       type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -325,10 +405,10 @@ layer {
   inner_product_param {
     num_output: 2
     weight_filler {
-       type: "xavier"
+#       type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -371,10 +451,10 @@ layer {
     kernel_size: 5
     stride: 1
     weight_filler {
-      type: "xavier"
+#      type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -394,9 +474,49 @@ layer {
   }
 }
 layer {
+  name: "conv2_m"
+  type: "Convolution"
+  bottom: "pool1_m"
+  top: "conv2_m"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv2_b"
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+#      type: "xavier"
+#      type: "constant"
+#      value: 1
+type: "uniform"
+    }
+    bias_filler {
+#      type: "constant"
+      type: "uniform"
+    }
+  }
+}
+layer {
+  name: "pool2_m"
+  type: "Pooling"
+  bottom: "conv2_m"
+  top: "pool2_m"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
   name: "ip1_m"
   type: "InnerProduct"
-  bottom: "pool1_m"
+  bottom: "pool2_m"
   top: "ip1_m"
   param {
     name: "ip1_w"
@@ -409,10 +529,10 @@ layer {
   inner_product_param {
     num_output: 500
     weight_filler {
-      type: "xavier"
+#      type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -442,10 +562,10 @@ layer {
   inner_product_param {
     num_output: 10
     weight_filler {
-      type: "xavier"
+#      type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"
@@ -469,10 +589,10 @@ layer {
   inner_product_param {
     num_output: 2
     weight_filler {
-      type: "xavier"
+#      type: "xavier"
 #      type: "constant"
 #      value: 1
-#type: "uniform"
+type: "uniform"
     }
     bias_filler {
 #      type: "constant"

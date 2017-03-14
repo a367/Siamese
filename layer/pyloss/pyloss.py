@@ -29,9 +29,9 @@ class EuclideanDistanceLayer(caffe.Layer):
         diff = bottom[0].data - bottom[1].data
         dis = np.sqrt(np.sum(diff ** 2, axis=1))
         normal_dis = (dis - np.min(dis)) / (np.max(dis) - np.min(dis))
-        pred = normal_dis <= threshold
+        pred = dis <= threshold
 
-        # comfusion matrix
+        # confusion matrix
         TP = np.sum(pred * sims)
         FP = np.sum(pred * (1 - sims))
         FN = np.sum((1 - pred) * sims)

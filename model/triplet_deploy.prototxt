@@ -1,74 +1,62 @@
-name: "triplet_train"
+name: "triplet_deploy"
 
 ###############
 ### input   ###
 ###############
 
 layer {
-  name: "triplet_data"
-  type: "Data"
-  top: "triplet_data"
-  #top: "sim"
-  include {
-    phase: TRAIN
-  }
-  transform_param {
-    scale: 0.00390625
-    # scale: 1
-  }
-  data_param {
-    source: "data/train_lmdb"
-    batch_size: 64
-    backend: LMDB
-  }
+  name: "pair_data"
+  type: "Input"
+  top: "pair_data"
+  input_param { shape: { dim: 30000 dim: 2 dim: 28 dim: 28 } }
 }
+
+layer {
+  name: "sim"
+  type: "Input"
+  top: "sim"
+  input_param { shape: { dim: 30000} }
+}
+
+layer {
+  name: "threshold"
+  type: "Input"
+  top: "threshold"
+  input_param { shape: { dim: 1} }
+
+}
+
 
 ###############
 ### slice   ###
 ###############
 
 layer {
-  name: "slice_triplet"
+  name: "slice_pair"
   type: "Slice"
-  bottom: "triplet_data"
+  bottom: "pair_data"
   top: "data"
   top: "data_p"
-  top: "data_m"
   slice_param {
     slice_dim: 1
     slice_point: 1
-    slice_point: 2
   }
 }
+
 
 ###############
 ### data  1 ###
 ###############
-
 
 layer {
   name: "conv1"
   type: "Convolution"
   bottom: "data"
   top: "conv1"
-  param {
-    name: "conv1_w"
-    lr_mult: 1
-  }
-  param {
-    name: "conv1_b"
-    lr_mult: 2
-  }
   convolution_param {
     num_output: 20
     kernel_size: 5
     stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layer {
@@ -82,63 +70,35 @@ layer {
     stride: 2
   }
 }
-layer {
-  name: "conv2"
-  type: "Convolution"
-  bottom: "pool1"
-  top: "conv2"
-  param {
-    name: "conv2_w"
-    lr_mult: 1
-  }
-  param {
-    name: "conv2_b"
-    lr_mult: 2
-  }
-  convolution_param {
-    num_output: 50
-    kernel_size: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "pool2"
-  type: "Pooling"
-  bottom: "conv2"
-  top: "pool2"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
+#layer {
+#  name: "conv2"
+#  type: "Convolution"
+#  bottom: "pool1"
+#  top: "conv2"
+#  convolution_param {
+#    num_output: 50
+#    kernel_size: 5
+#    stride: 1
+#  }
+#}
+#layer {
+#  name: "pool2"
+#  type: "Pooling"
+#  bottom: "conv2"
+#  top: "pool2"
+#  pooling_param {
+#    pool: MAX
+#    kernel_size: 2
+#    stride: 2
+#  }
+#}
 layer {
   name: "ip1"
   type: "InnerProduct"
-  bottom: "pool2"
+  bottom: "pool1"
   top: "ip1"
-  param {
-    name: "ip1_w"
-    lr_mult: 1
-  }
-  param {
-    name: "ip1_b"
-    lr_mult: 2
-  }
   inner_product_param {
     num_output: 500
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layer {
@@ -152,22 +112,8 @@ layer {
   type: "InnerProduct"
   bottom: "ip1"
   top: "ip2"
-  param {
-    name: "ip2_w"
-    lr_mult: 1
-  }
-  param {
-    name: "ip2_b"
-    lr_mult: 2
-  }
   inner_product_param {
     num_output: 10
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layer {
@@ -175,24 +121,22 @@ layer {
   type: "InnerProduct"
   bottom: "ip2"
   top: "feat"
-  param {
-    name: "feat_w"
-    lr_mult: 1
-  }
-  param {
-    name: "feat_b"
-    lr_mult: 2
-  }
   inner_product_param {
     num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
+
+layer {
+  name: "l2_norm_1"
+  type: "Python"
+  bottom: "feat"
+  top: "l2_feat"
+  python_param {
+    module: "pyloss"
+    layer: "Norm2Layer"
+  }
+}
+
 
 ###############
 ### data  2 ###
@@ -203,24 +147,10 @@ layer {
   type: "Convolution"
   bottom: "data_p"
   top: "conv1_p"
-  param {
-    name: "conv1_w"
-    lr_mult: 1
-  }
-  param {
-    name: "conv1_b"
-    lr_mult: 2
-  }
   convolution_param {
     num_output: 20
     kernel_size: 5
     stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layer {
@@ -234,63 +164,35 @@ layer {
     stride: 2
   }
 }
-layer {
-  name: "conv2_p"
-  type: "Convolution"
-  bottom: "pool1_p"
-  top: "conv2_p"
-  param {
-    name: "conv2_w"
-    lr_mult: 1
-  }
-  param {
-    name: "conv2_b"
-    lr_mult: 2
-  }
-  convolution_param {
-    num_output: 50
-    kernel_size: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "pool2_p"
-  type: "Pooling"
-  bottom: "conv2_p"
-  top: "pool2_p"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
+#layer {
+#  name: "conv2_p"
+#  type: "Convolution"
+#  bottom: "pool1_p"
+#  top: "conv2_p"
+#  convolution_param {
+#    num_output: 50
+#    kernel_size: 5
+#    stride: 1
+#  }
+#}
+#layer {
+#  name: "pool2_p"
+#  type: "Pooling"
+#  bottom: "conv2_p"
+#  top: "pool2_p"
+#  pooling_param {
+#    pool: MAX
+#    kernel_size: 2
+#    stride: 2
+#  }
+#}
 layer {
   name: "ip1_p"
   type: "InnerProduct"
-  bottom: "pool2_p"
+  bottom: "pool1_p"
   top: "ip1_p"
-  param {
-    name: "ip1_w"
-    lr_mult: 1
-  }
-  param {
-    name: "ip1_b"
-    lr_mult: 2
-  }
   inner_product_param {
     num_output: 500
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layer {
@@ -304,22 +206,8 @@ layer {
   type: "InnerProduct"
   bottom: "ip1_p"
   top: "ip2_p"
-  param {
-    name: "ip2_w"
-    lr_mult: 1
-  }
-  param {
-    name: "ip2_b"
-    lr_mult: 2
-  }
   inner_product_param {
     num_output: 10
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layer {
@@ -327,193 +215,41 @@ layer {
   type: "InnerProduct"
   bottom: "ip2_p"
   top: "feat_p"
-  param {
-    name: "feat_w"
-    lr_mult: 1
-  }
-  param {
-    name: "feat_b"
-    lr_mult: 2
-  }
   inner_product_param {
     num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 
-###############
-### data  3 ###
-###############
-
 layer {
-  name: "conv1_m"
-  type: "Convolution"
-  bottom: "data_m"
-  top: "conv1_m"
-  param {
-    name: "conv1_w"
-    lr_mult: 1
-  }
-  param {
-    name: "conv1_b"
-    lr_mult: 2
-  }
-  convolution_param {
-    num_output: 20
-    kernel_size: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "pool1_m"
-  type: "Pooling"
-  bottom: "conv1_m"
-  top: "pool1_m"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-layer {
-  name: "conv2_m"
-  type: "Convolution"
-  bottom: "pool1_m"
-  top: "conv2_m"
-  param {
-    name: "conv2_w"
-    lr_mult: 1
-  }
-  param {
-    name: "conv2_b"
-    lr_mult: 2
-  }
-  convolution_param {
-    num_output: 50
-    kernel_size: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "pool2_m"
-  type: "Pooling"
-  bottom: "conv2_m"
-  top: "pool2_m"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-layer {
-  name: "ip1_m"
-  type: "InnerProduct"
-  bottom: "pool2_m"
-  top: "ip1_m"
-  param {
-    name: "ip1_w"
-    lr_mult: 1
-  }
-  param {
-    name: "ip1_b"
-    lr_mult: 2
-  }
-  inner_product_param {
-    num_output: 500
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "relu1_m"
-  type: "ReLU"
-  bottom: "ip1_m"
-  top: "ip1_m"
-}
-layer {
-  name: "ip2_m"
-  type: "InnerProduct"
-  bottom: "ip1_m"
-  top: "ip2_m"
-  param {
-    name: "ip2_w"
-    lr_mult: 1
-  }
-  param {
-    name: "ip2_b"
-    lr_mult: 2
-  }
-  inner_product_param {
-    num_output: 10
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "feat_m"
-  type: "InnerProduct"
-  bottom: "ip2_m"
-  top: "feat_m"
-  param {
-    name: "feat_w"
-    lr_mult: 1
-  }
-  param {
-    name: "feat_b"
-    lr_mult: 2
-  }
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-
-###############
-###   loss  ###
-###############
-
-
-layer {
-  name: "triplet_loss"
+  name: "l2_norm_2"
   type: "Python"
-  bottom: "feat"
   bottom: "feat_p"
-  bottom: "feat_m"
-  top: "loss"
+  top: "l2_feat_p"
   python_param {
     module: "pyloss"
-    layer: "TripletLayer"
-    param_str: "'margin': 0.2"
+    layer: "Norm2Layer"
   }
-  loss_weight: 1
+}
+
+###################
+###   accuracy  ###
+###################
+
+
+layer {
+  name: "accuracy"
+  type: "Python"
+  bottom: "l2_feat"
+  bottom: "l2_feat_p"
+  bottom: 'sim'
+  bottom: 'threshold'
+  
+  top: "accuracy"
+  top: "TPR"
+  top: "FPR"
+
+  python_param {
+    module: "pyloss"
+    layer: "EuclideanDistanceLayer"
+  }
 }

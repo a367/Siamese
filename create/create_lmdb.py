@@ -36,10 +36,12 @@ def main(npz_path):
     train_imgs = src['train_X']
     train_num = np.shape(train_imgs)[0]
 
+    print train_imgs.shape
+
     with lmdb.open('data/train_lmdb', map_size=int(1e12)).begin(write=True) as db:
         store_datums(db, train_imgs, train_num)
 
 
 if __name__ == '__main__':
     # np.set_printoptions(threshold=np.nan)
-    main('data/mnist.npz')
+    main('data/triplet_mnist.npz')

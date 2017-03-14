@@ -7,12 +7,15 @@
 import os
 import lmdb
 import numpy as np
-# import cv2, cv
 import caffe
 from caffe.proto import caffe_pb2
 from caffe.io import datum_to_array
 import matplotlib.pyplot as plt
 from scipy.misc import toimage
+
+
+def generate_mean_image():
+    os.system('~/caffe/build/tools/compute_image_mean -backend=lmdb data/train_lmdb data/mean.binaryproto')
 
 
 def get_data_for_case_from_lmdb(lmdb_name, idx):
@@ -29,18 +32,10 @@ def get_data_for_case_from_lmdb(lmdb_name, idx):
     return label, feature
 
 
-def main():
+def train():
     solver_path = 'model/triplet_solver.prototxt'
     log_path = 'log/train.log'
-    os.system('~/caffe/build/tools/caffe train --solver %s -gpu 1  2>&1 | tee %s' % (solver_path, log_path))
-
-    # caffe.set_mode_gpu()
-    # solver = caffe.get_solver(solver_path)
-    # solver.solve()
-
-
-def generate_mean_image():
-    os.system('~/caffe/build/tools/compute_image_mean -backend=lmdb data/train_lmdb data/mean.binaryproto')
+    os.system('~/caffe/build/tools/caffe train --solver %s -gpu 0  2>&1 | tee %s' % (solver_path, log_path))
 
 
 def compute_accuracy(net, pair_imgs, sims, threshold):
@@ -49,26 +44,22 @@ def compute_accuracy(net, pair_imgs, sims, threshold):
     return out['accuracy'][0], out['TPR'][0], out['FPR'][0]
 
 
-def apply():
-    net = caffe.Net("model/siamese_deploy.prototxt", "model/_iter_50000.caffemodel", caffe.TEST)
+def apply(deploy_path, npz_path):
+    net = caffe.Net(deploy_path, "log/_iter_50000.caffemodel", caffe.TEST)
 
-    pair_imgs = []
-    sims = []
+    data = np.load(npz_path)
 
-    for i in xrange(10000):
-        sim, pair_img = get_data_for_case_from_lmdb("data/test_lmdb/", "%.8d" % i)
-        sims.append(sim)
-        pair_imgs.append(pair_img)
-
-    pair_imgs = np.array(pair_imgs)
-    sims = np.array(sims)
+    test_X = data['test_X']
+    test_Y = data['test_Y']
     # net.blobs['pair_data'].reshape(*pair_imgs.shape)
 
     TPR_arr = []
     FPR_arr = []
 
-    for i in xrange(200):
-        accuracy, TPR, FPR = compute_accuracy(net, pair_imgs, sims, np.array([i / 200.0]))
+    point_num = 100
+
+    for i in xrange(point_num):
+        accuracy, TPR, FPR = compute_accuracy(net, test_X, test_Y, np.array([i / float(point_num)]))
         print 'accuracy: %s,   TPR: %s,   FPR: %s' % (accuracy, TPR, FPR)
         TPR_arr.append(TPR)
         FPR_arr.append(FPR)
@@ -78,5 +69,5 @@ def apply():
 
 
 if __name__ == '__main__':
-    main()
-    # apply()
+    train()
+    # apply("model/triplet_deploy.prototxt", "data/triplet_mnist.npz")
