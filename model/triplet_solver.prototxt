@@ -4,20 +4,19 @@ net: "model/triplet_train.prototxt"
 # Carry out testing every 500 training iterations.
 #test_interval: 1000000
 # The base learning rate, momentum and the weight decay of the network.
-base_lr: 2e-3
-#momentum: 2e-3
+base_lr: 1e-2
+momentum: 9e-1
 weight_decay: 0
 # The learning rate policy
 lr_policy: "inv"
-gamma: 0.00002
+gamma: 0.0001
 power: 0.75
 # Display every 100 iterations
-display: 100
+display: 1
 # The maximum number of iterations
-max_iter: 100000
+max_iter: 100
 # snapshot intermediate results
 snapshot: 5000
 snapshot_prefix: "log/"
 # solver mode: CPU or GPU
-type: "RMSProp"
 solver_mode: GPU

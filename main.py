@@ -45,7 +45,7 @@ def compute_accuracy(net, pair_imgs, sims, threshold):
 
 
 def apply(deploy_path, npz_path):
-    net = caffe.Net(deploy_path, "log/_iter_50000.caffemodel", caffe.TEST)
+    net = caffe.Net(deploy_path, "log/_iter_100000.caffemodel", caffe.TEST)
 
     data = np.load(npz_path)
 

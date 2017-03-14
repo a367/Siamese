@@ -8,12 +8,11 @@ layer {
   name: "triplet_data"
   type: "Data"
   top: "triplet_data"
-  #top: "sim"
   include {
     phase: TRAIN
   }
   transform_param {
-    scale: 1
+    scale: 0.00390625
     # scale: 1
   }
   data_param {
@@ -22,25 +21,6 @@ layer {
     backend: LMDB
   }
 }
-
-#layer {
-#  name: "triplet_data"
-#  type: "Data"
-#  top: "triplet_data"
-#  #top: "sim"
-#  include {
-#    phase: TEST
-#  }
-#  transform_param {
-#    scale: 0.00390625
-#    # scale: 1
-#  }
-#  data_param {
-#    source: "data/train_lmdb"
-#    batch_size: 64
-#    backend: LMDB
-#  }
-#}
 
 ###############
 ### slice   ###
@@ -84,13 +64,9 @@ layer {
     stride: 1
     weight_filler {
       type: "xavier"
-#      type: "constant"
-#      value: 1
-#       type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -106,9 +82,45 @@ layer {
   }
 }
 layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv2_b"
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+       type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
   name: "ip1"
   type: "InnerProduct"
-  bottom: "pool1"
+  bottom: "pool2"
   top: "ip1"
   param {
     name: "ip1_w"
@@ -122,13 +134,9 @@ layer {
     num_output: 500
     weight_filler {
       type: "xavier"
-#      type: "constant"
-#      value: 1
-#        type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-    type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -155,13 +163,9 @@ layer {
     num_output: 10
     weight_filler {
       type: "xavier"
-#      type: "constant"
-#      value: 1
-#    type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -182,28 +186,23 @@ layer {
     num_output: 2
     weight_filler {
        type: "xavier"
-#      type: "constant"
-#      value: 1
-#    type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
 
-layer {
-  name: "l2_norm_1"
-  type: "Python"
-  bottom: "feat"
-#  bottom: "ip1"
-  top: "l2_feat"
-  python_param {
-    module: "pyloss"
-    layer: "Norm2Layer"
-  }
-}
+#layer {
+#  name: "l2_norm_1"
+#  type: "Python"
+#  bottom: "feat"
+#  top: "l2_feat"
+#  python_param {
+#    module: "pyloss"
+#    layer: "Norm2Layer"
+#  }
+#}
 
 ###############
 ### data  2 ###
@@ -228,13 +227,9 @@ layer {
     stride: 1
     weight_filler {
        type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -250,9 +245,45 @@ layer {
   }
 }
 layer {
+  name: "conv2_p"
+  type: "Convolution"
+  bottom: "pool1_p"
+  top: "conv2_p"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv2_b"
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+       type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "pool2_p"
+  type: "Pooling"
+  bottom: "conv2_p"
+  top: "pool2_p"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
   name: "ip1_p"
   type: "InnerProduct"
-  bottom: "pool1_p"
+  bottom: "pool2_p"
   top: "ip1_p"
   param {
     name: "ip1_w"
@@ -266,13 +297,9 @@ layer {
     num_output: 500
     weight_filler {
        type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -299,13 +326,9 @@ layer {
     num_output: 10
     weight_filler {
        type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -326,26 +349,10 @@ layer {
     num_output: 2
     weight_filler {
        type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
-  }
-}
-
-layer {
-  name: "l2_norm_2"
-  type: "Python"
-  bottom: "feat_p"
-#  bottom: "data_p"
-  top: "l2_feat_p"
-  python_param {
-    module: "pyloss"
-    layer: "Norm2Layer"
   }
 }
 
@@ -372,13 +379,9 @@ layer {
     stride: 1
     weight_filler {
       type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -394,9 +397,45 @@ layer {
   }
 }
 layer {
+  name: "conv2_m"
+  type: "Convolution"
+  bottom: "pool1_m"
+  top: "conv2_m"
+  param {
+    name: "conv2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv2_b"
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "pool2_m"
+  type: "Pooling"
+  bottom: "conv2_m"
+  top: "pool2_m"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
   name: "ip1_m"
   type: "InnerProduct"
-  bottom: "pool1_m"
+  bottom: "pool2_m"
   top: "ip1_m"
   param {
     name: "ip1_w"
@@ -410,13 +449,9 @@ layer {
     num_output: 500
     weight_filler {
       type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -443,13 +478,9 @@ layer {
     num_output: 10
     weight_filler {
       type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
   }
 }
@@ -470,26 +501,10 @@ layer {
     num_output: 2
     weight_filler {
       type: "xavier"
-#      type: "constant"
-#      value: 1
-#type: "uniform"
     }
     bias_filler {
-#      type: "constant"
-      type: "uniform"
+      type: "constant"
     }
-  }
-}
-
-layer {
-  name: "l2_norm_3"
-  type: "Python"
-  bottom: "feat_m"
-#  bottom: "data_m"
-  top: "l2_feat_m"
-  python_param {
-    module: "pyloss"
-    layer: "Norm2Layer"
   }
 }
 
@@ -501,23 +516,15 @@ layer {
 layer {
   name: "triplet_loss"
   type: "Python"
-  bottom: "l2_feat"
-  bottom: "l2_feat_p"
-  bottom: "l2_feat_m"
 
-#  bottom: "data"
-#  bottom: "data_p"
-#  bottom: "data_m"
-
-
-#  bottom: "feat"
-#  bottom: "feat_p"
-#  bottom: "feat_m"
+  bottom: "feat"
+  bottom: "feat_p"
+  bottom: "feat_m"
 
   top: "loss"
   python_param {
     module: "pyloss"
-    layer: "TripletLayer"
+    layer: "TripletLayer2"
     param_str: "'margin': 0.2"
   }
   loss_weight: 1
