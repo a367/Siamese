@@ -33,27 +33,18 @@ from scipy.misc import toimage
 #
 # print a.repeat(3,axis=0)
 
-def get_data_for_case_from_lmdb(lmdb_name, idx):
-    lmdb_env = lmdb.open(lmdb_name, readonly=True)
-    lmdb_txn = lmdb_env.begin()
+# a = np.array([[1,2,3],[4,5,6],[7,8,9]])
+#
+# b = np.array([1,0,1])
+#
+# c = np.array([0,1,1])
+#
+# print a*b.reshape(-1,1) * c.reshape(-1,1)
 
-    raw_datum = lmdb_txn.get(idx)
-    datum = caffe_pb2.Datum()
-    datum.ParseFromString(raw_datum)
+a = np.array([1,0,1,0]).reshape(-1,1)
+b = np.array([1,2,3,4])
 
-    feature = datum_to_array(datum)
-    label = datum.label
-
-    return label, feature
-
-
-
-
-l,f = get_data_for_case_from_lmdb('data/train_lmdb', '%.8d'%22)
-
-print (f[1]!=0)*1
-print (f[2]!=0)*1
-
+print a*b
 
 
 

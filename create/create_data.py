@@ -9,6 +9,7 @@ import random
 
 DATA_SET_PATH = '../data'
 
+
 class DataSet:
     def __init__(self, npz_path):
         res = np.load(npz_path)

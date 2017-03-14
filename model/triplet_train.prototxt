@@ -551,7 +551,7 @@ layer {
   top: "loss"
   python_param {
     module: "pyloss"
-    layer: "TripletLayer2"
+    layer: "TripletLayer"
     param_str: "'margin': 0.2"
   }
   loss_weight: 1

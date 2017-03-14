@@ -32,10 +32,8 @@ def get_data_for_case_from_lmdb(lmdb_name, idx):
     return label, feature
 
 
-def train():
-    solver_path = 'model/triplet_solver.prototxt'
-    log_path = 'log/train.log'
-    os.system('~/caffe/build/tools/caffe train --solver %s -gpu 0  2>&1 | tee %s' % (solver_path, log_path))
+def train(solver_path, log_path):
+    os.system('~/caffe/build/tools/caffe train --solver %s -gpu 3  2>&1 | tee %s' % (solver_path, log_path))
 
 
 def compute_accuracy(net, pair_imgs, sims, threshold):
@@ -69,5 +67,10 @@ def apply(deploy_path, npz_path):
 
 
 if __name__ == '__main__':
-    train()
+    # train triplet loss
+    # train('model/triplet_solver.prototxt', 'log/train.log')
+
+    # train contrastive loss
+    train('model/siamese/mnist_siamese_solver.prototxt', 'log/siamese/train.log')
+
     # apply("model/triplet_deploy.prototxt", "data/triplet_mnist.npz")
