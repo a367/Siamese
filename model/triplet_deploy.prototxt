@@ -70,32 +70,32 @@ layer {
     stride: 2
   }
 }
-#layer {
-#  name: "conv2"
-#  type: "Convolution"
-#  bottom: "pool1"
-#  top: "conv2"
-#  convolution_param {
-#    num_output: 50
-#    kernel_size: 5
-#    stride: 1
-#  }
-#}
-#layer {
-#  name: "pool2"
-#  type: "Pooling"
-#  bottom: "conv2"
-#  top: "pool2"
-#  pooling_param {
-#    pool: MAX
-#    kernel_size: 2
-#    stride: 2
-#  }
-#}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+  }
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
 layer {
   name: "ip1"
   type: "InnerProduct"
-  bottom: "pool1"
+  bottom: "pool2"
   top: "ip1"
   inner_product_param {
     num_output: 500
@@ -164,32 +164,32 @@ layer {
     stride: 2
   }
 }
-#layer {
-#  name: "conv2_p"
-#  type: "Convolution"
-#  bottom: "pool1_p"
-#  top: "conv2_p"
-#  convolution_param {
-#    num_output: 50
-#    kernel_size: 5
-#    stride: 1
-#  }
-#}
-#layer {
-#  name: "pool2_p"
-#  type: "Pooling"
-#  bottom: "conv2_p"
-#  top: "pool2_p"
-#  pooling_param {
-#    pool: MAX
-#    kernel_size: 2
-#    stride: 2
-#  }
-#}
+layer {
+  name: "conv2_p"
+  type: "Convolution"
+  bottom: "pool1_p"
+  top: "conv2_p"
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+  }
+}
+layer {
+  name: "pool2_p"
+  type: "Pooling"
+  bottom: "conv2_p"
+  top: "pool2_p"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
 layer {
   name: "ip1_p"
   type: "InnerProduct"
-  bottom: "pool1_p"
+  bottom: "pool2_p"
   top: "ip1_p"
   inner_product_param {
     num_output: 500
@@ -239,8 +239,8 @@ layer {
 layer {
   name: "accuracy"
   type: "Python"
-  bottom: "l2_feat"
-  bottom: "l2_feat_p"
+  bottom: "feat"
+  bottom: "feat_p"
   bottom: 'sim'
   bottom: 'threshold'
   

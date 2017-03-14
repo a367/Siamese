@@ -99,9 +99,9 @@ class TripletLayer(caffe.Layer):
         # print np.sum(2.0 * (x_m - x_p) * self.check, axis=0).shape
 
         # .reshape(1, -1).repeat(bottom[0].num, axis=0)
-        bottom[0].diff[...] = np.sum(2.0 * (x_m - x_p) * self.check, axis=0).reshape(1, -1).repeat(bottom[0].num, axis=0)
-        bottom[1].diff[...] = np.sum(2.0 * (x_p - x) * self.check, axis=0).reshape(1, -1).repeat(bottom[0].num, axis=0)
-        bottom[2].diff[...] = np.sum(2.0 * (x - x_m) * self.check, axis=0).reshape(1, -1).repeat(bottom[0].num, axis=0)
+        bottom[0].diff[...] = 2.0 * (x_m - x_p) * self.check / bottom[0].num
+        bottom[1].diff[...] = 2.0 * (x_p - x) * self.check / bottom[1].num
+        bottom[2].diff[...] = 2.0 * (x - x_m) * self.check / bottom[1].num
 
 
         # print bottom[1].diff[1]
@@ -110,7 +110,7 @@ class TripletLayer(caffe.Layer):
 
 class TripletLayer2(caffe.Layer):
     def setup(self, bottom, top):
-        self.margin = 1
+        self.margin = 2
         top[0].reshape(1)
 
     def reshape(self, bottom, top):
@@ -134,9 +134,8 @@ class TripletLayer2(caffe.Layer):
         x_p = bottom[1].data
         x_m = bottom[2].data
 
-        bottom[1].diff[...] = np.mean(x_p - x, axis=0).reshape(1, -1).repeat(bottom[0].num, axis=0)
-        bottom[2].diff[...] = np.mean(((self.dis_m - self.margin) / (1e-4 + self.dis_m)).reshape(-1, 1) * (x_m - x) * self.check, axis=0).reshape(1, -1).repeat(
-            bottom[0].num, axis=0)
+        bottom[1].diff[...] = (x_p - x) / bottom[1].num
+        bottom[2].diff[...] = ((self.dis_m - self.margin) / (1e-4 + self.dis_m)).reshape(-1, 1) * (x_m - x) * self.check / bottom[2].num
         bottom[0].diff[...] = -bottom[1].diff - bottom[2].diff
 
         # print bottom[1].diff[1]

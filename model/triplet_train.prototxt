@@ -193,16 +193,16 @@ layer {
   }
 }
 
-#layer {
-#  name: "l2_norm_1"
-#  type: "Python"
-#  bottom: "feat"
-#  top: "l2_feat"
-#  python_param {
-#    module: "pyloss"
-#    layer: "Norm2Layer"
-#  }
-#}
+layer {
+  name: "l2_norm_1"
+  type: "Python"
+  bottom: "feat"
+  top: "l2_feat"
+  python_param {
+    module: "pyloss"
+    layer: "Norm2Layer"
+  }
+}
 
 ###############
 ### data  2 ###
@@ -353,6 +353,17 @@ layer {
     bias_filler {
       type: "constant"
     }
+  }
+}
+
+layer {
+  name: "l2_norm_2"
+  type: "Python"
+  bottom: "feat_p"
+  top: "l2_feat_p"
+  python_param {
+    module: "pyloss"
+    layer: "Norm2Layer"
   }
 }
 
@@ -508,6 +519,17 @@ layer {
   }
 }
 
+layer {
+  name: "l2_norm_3"
+  type: "Python"
+  bottom: "feat_m"
+  top: "l2_feat_m"
+  python_param {
+    module: "pyloss"
+    layer: "Norm2Layer"
+  }
+}
+
 ###############
 ###   loss  ###
 ###############
@@ -517,9 +539,14 @@ layer {
   name: "triplet_loss"
   type: "Python"
 
-  bottom: "feat"
-  bottom: "feat_p"
-  bottom: "feat_m"
+#  bottom: "feat"
+#  bottom: "feat_p"
+#  bottom: "feat_m"
+
+
+  bottom: "l2_feat"
+  bottom: "l2_feat_p"
+  bottom: "l2_feat_m"
 
   top: "loss"
   python_param {

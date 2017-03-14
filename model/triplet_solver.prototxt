@@ -5,16 +5,16 @@ net: "model/triplet_train.prototxt"
 #test_interval: 1000000
 # The base learning rate, momentum and the weight decay of the network.
 base_lr: 1e-2
-momentum: 9e-1
-weight_decay: 0
+momentum: 0.9
+weight_decay: 0.0
 # The learning rate policy
 lr_policy: "inv"
 gamma: 0.0001
 power: 0.75
 # Display every 100 iterations
-display: 1
+display: 100
 # The maximum number of iterations
-max_iter: 100
+max_iter: 100000
 # snapshot intermediate results
 snapshot: 5000
 snapshot_prefix: "log/"

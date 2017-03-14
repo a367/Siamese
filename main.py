@@ -56,7 +56,7 @@ def apply(deploy_path, npz_path):
     TPR_arr = []
     FPR_arr = []
 
-    point_num = 100
+    point_num = 50
 
     for i in xrange(point_num):
         accuracy, TPR, FPR = compute_accuracy(net, test_X, test_Y, np.array([i / float(point_num)]))
