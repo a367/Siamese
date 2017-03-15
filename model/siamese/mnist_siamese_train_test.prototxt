@@ -23,24 +23,24 @@ layer {
     backend: LMDB
   }
 }
-#layer {
-#  name: "pair_data"
-#  type: "Data"
-#  top: "pair_data"
-#  top: "sim"
-#  include {
-#    phase: TEST
-#  }
-#  transform_param {
-#    scale: 0.00390625
-#    # scale: 1
-#  }
-#  data_param {
-#    source: "data/test_lmdb"
-#    batch_size: 100
-#    backend: LMDB
-#  }
-#}
+layer {
+  name: "pair_data"
+  type: "Data"
+  top: "pair_data"
+  top: "sim"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    scale: 0.00390625
+    # scale: 1
+  }
+  data_param {
+    source: "data/contrastive_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+}
 
 ###############
 ### slice   ###
@@ -367,36 +367,36 @@ layer {
 ###   loss  ###
 ###############
 
-#layer {
-#  name: "loss"
-#  type: "ContrastiveLoss"
-#  bottom: "feat"
-#  bottom: "feat_p"
-#  bottom: "sim"
-#  top: "loss"
-#  contrastive_loss_param {
-#    margin: 1
-#    legacy_version: true
-#  }
-#}
-
-
 layer {
-  name: "_loss"
-  type: "Python"
-
+  name: "loss"
+  type: "ContrastiveLoss"
   bottom: "feat"
   bottom: "feat_p"
   bottom: "sim"
-
-
   top: "loss"
-  python_param {
-    module: "pyloss"
-#    layer: "OwnContrastiveLossLayer"
-    layer: "ContrastiveLayer"
-#    param_str: "'margin': 0.2"
-
+  contrastive_loss_param {
+    margin: 1
+#    legacy_version: true
   }
-  loss_weight: 1
 }
+
+
+#layer {
+#  name: "_loss"
+#  type: "Python"
+#
+#  bottom: "feat"
+#  bottom: "feat_p"
+#  bottom: "sim"
+#
+#
+#  top: "loss"
+#  python_param {
+#    module: "pyloss"
+##    layer: "OwnContrastiveLossLayer"
+#    layer: "ContrastiveLayer"
+##    param_str: "'margin': 0.2"
+#
+#  }
+#  loss_weight: 1
+#}

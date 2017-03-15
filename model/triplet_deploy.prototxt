@@ -8,14 +8,14 @@ layer {
   name: "pair_data"
   type: "Input"
   top: "pair_data"
-  input_param { shape: { dim: 30000 dim: 2 dim: 28 dim: 28 } }
+  input_param { shape: { dim: 10000 dim: 2 dim: 28 dim: 28 } }
 }
 
 layer {
   name: "sim"
   type: "Input"
   top: "sim"
-  input_param { shape: { dim: 30000} }
+  input_param { shape: { dim: 10000} }
 }
 
 layer {
@@ -236,14 +236,31 @@ layer {
 ###################
 
 
+#layer {
+#  name: "loss"
+#  type: "ContrastiveLoss"
+#  bottom: "feat"
+#  bottom: "feat_p"
+#  bottom: "sim"
+#  top: "loss"
+#  contrastive_loss_param {
+#    margin: 1
+##    legacy_version: true
+#  }
+#}
+
 layer {
   name: "accuracy"
   type: "Python"
-  bottom: "feat"
-  bottom: "feat_p"
+#  bottom: "feat"
+#  bottom: "feat_p"
+
+  bottom: "l2_feat"
+  bottom: "l2_feat_p"
+
   bottom: 'sim'
   bottom: 'threshold'
-  
+
   top: "accuracy"
   top: "TPR"
   top: "FPR"

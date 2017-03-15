@@ -124,11 +124,11 @@ def create_contrastive_data(npz_path, dest_path):
     class_num = np.shape(src_train_Y)[1]
 
     # triple data parameter
-    train_num = 70000
-    test_num = 30000
+    train_num = src_train_num
+    test_num = src_test_num
 
     # create contrastive train data
-    train_X, train_Y = get_contrastive_data(train_num, src_test_num, src_test_X, src_test_Y)
+    train_X, train_Y = get_contrastive_data(train_num, src_train_num, src_train_X, src_train_Y)
 
     # create test data
     test_X, test_Y = get_contrastive_data(test_num, src_test_num, src_test_X, src_test_Y, shape=(28, 28))

@@ -87,7 +87,7 @@ class TripletLayer(caffe.Layer):
         self.check = (loss >= 0).reshape(-1, 1)
         # print self.check
 
-        top[0].data[...] = np.mean(np.maximum(0, loss)) / self.margin
+        top[0].data[...] = np.mean(np.maximum(0, loss))
         # print 'loss:', np.sum(np.maximum(0, loss))
 
     def backward(self, top, propagate_down, bottom):
@@ -156,15 +156,15 @@ class ContrastiveLayer(caffe.Layer):
         sim = bottom[2].data
 
         # legacy version
-        # dis_p = np.sum(np.square((x - x_2)), axis=1)
-        # loss_m = np.maximum(0, self.margin - dis_p)
-        # self.check = (self.margin - dis_p >= 0).reshape(-1, 1)
+        dis_p = np.sum(np.square((x - x_2)), axis=1)
+        loss_m = np.maximum(0, self.margin - dis_p)
+        self.check = (self.margin - dis_p >= 0).reshape(-1, 1)
 
         # current version
-        dis_p = np.sum(np.square((x - x_2)), axis=1)
-        self.dis_m = np.sqrt(dis_p)
-        loss_m = np.square(np.maximum(0, self.margin - self.dis_m))
-        self.check = (self.margin - self.dis_m >= 0).reshape(-1, 1)
+        # dis_p = np.sum(np.square((x - x_2)), axis=1)
+        # self.dis_m = np.sqrt(dis_p)
+        # loss_m = np.square(np.maximum(0, self.margin - self.dis_m))
+        # self.check = (self.margin - self.dis_m >= 0).reshape(-1, 1)
 
         # loss
         top[0].data[...] = np.mean((1 - sim) * loss_m + sim * dis_p) / 2.0
@@ -177,13 +177,13 @@ class ContrastiveLayer(caffe.Layer):
         alpha = top[0].diff / float(bottom[0].num)
 
         # legacy version
-        # grad_sim = (x - x_2) * alpha
-        # grad_not_sim = (x_2 - x) * self.check * alpha
+        grad_sim = (x - x_2) * alpha
+        grad_not_sim = (x_2 - x) * self.check * alpha
 
 
         # current version
-        grad_sim = (x - x_2) * alpha
-        grad_not_sim = ((self.dis_m - self.margin) / (self.dis_m + 1e-4)).reshape(-1, 1) * (x - x_2) * self.check * alpha
+        # grad_sim = (x - x_2) * alpha
+        # grad_not_sim = ((self.dis_m - self.margin) / (self.dis_m + 1e-4)).reshape(-1, 1) * (x - x_2) * self.check * alpha
 
         grad = grad_sim * sim + grad_not_sim * (1 - sim)
         bottom[0].diff[...] = grad

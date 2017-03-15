@@ -29,20 +29,11 @@ class EuclideanDistanceLayer(caffe.Layer):
         diff = bottom[0].data - bottom[1].data
         dis = np.sqrt(np.sum(diff ** 2, axis=1))
 
-
-
-
-
-        np.set_printoptions(threshold='nan')
-        with open('test.txt', 'w') as f:
-            f.write(str(np.hstack((dis.reshape(-1,1), sims.reshape(-1,1)))))
-
-        raise Exception("Inputs must have the same dimension.")
-
-
-
-
-
+        # np.set_printoptions(threshold='nan')
+        # with open('test.txt', 'w') as f:
+        #     f.write(str(np.hstack((dis.reshape(-1,1), sims.reshape(-1,1)))))
+        #
+        # raise Exception("Inputs must have the same dimension.")
 
         normal_dis = (dis - np.min(dis)) / (np.max(dis) - np.min(dis))
         pred = normal_dis <= threshold

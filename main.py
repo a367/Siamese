@@ -43,13 +43,29 @@ def compute_accuracy(net, pair_imgs, sims, threshold):
 
 
 def apply(deploy_path, npz_path):
-    net = caffe.Net(deploy_path, "log/_iter_100000.caffemodel", caffe.TEST)
+    net = caffe.Net(deploy_path, "log/_iter_50000.caffemodel", caffe.TEST)
+    # net = caffe.Net(deploy_path, "test.caffemodel", caffe.TEST)
 
     data = np.load(npz_path)
 
-    test_X = data['test_X']
-    test_Y = data['test_Y']
+    test_X = []
+    test_Y = []
+    for i in xrange(10000):
+        label, img = get_data_for_case_from_lmdb('data/contrastive_test_lmdb', '%.8d' % i)
+        test_X.append(img)
+        test_Y.append(label)
+
+    # test_X = data['test_X'][:10000] / 256.0
+    # test_Y = data['test_Y'][:10000]
     # net.blobs['pair_data'].reshape(*pair_imgs.shape)
+
+    test_X = np.array(test_X) / 256.0
+    test_Y = np.array(test_Y)
+
+    # out = net.forward(pair_data=test_X, sim=test_Y, threshold=np.array([1]))
+    #
+    # print out['loss']
+    # return
 
     TPR_arr = []
     FPR_arr = []
@@ -71,6 +87,6 @@ if __name__ == '__main__':
     # train('model/triplet_solver.prototxt', 'log/train.log')
 
     # train contrastive loss
-    train('model/siamese/mnist_siamese_solver.prototxt', 'log/siamese/train.log')
+    # train('model/siamese/mnist_siamese_solver.prototxt', 'log/siamese/train.log')
 
-    # apply("model/triplet_deploy.prototxt", "data/triplet_mnist.npz")
+    apply("model/triplet_deploy.prototxt", "data/contrastive_mnist.npz")

@@ -41,12 +41,17 @@ from scipy.misc import toimage
 #
 # print a*b.reshape(-1,1) * c.reshape(-1,1)
 
-a = np.array([1,0,1,0]).reshape(-1,1)
-b = np.array([1,2,3,4])
+# a = np.array([1,0,1,0]).reshape(-1,1)
+# b = np.array([1,2,3,4])
+#
+# print a*b
 
-print a*b
+data = np.load('data/triplet_mnist.npz')
 
+test_X = data['train_X']
+train_Y = data['test_X']
 
+print repr(test_X[0].tostring())
 
 
 
