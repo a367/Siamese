@@ -5,13 +5,13 @@
 
 import os
 import lmdb
+import random
 import numpy as np
 import caffe
 from caffe.proto import caffe_pb2
 from caffe.io import datum_to_array
 import matplotlib.pyplot as plt
 from scipy.misc import toimage
-
 
 # a = np.array([[-14.62028503, 385.21429443], [64.88478088, 246.48464966]])
 #
@@ -33,8 +33,6 @@ from scipy.misc import toimage
 #
 # print a.repeat(3,axis=0)
 
-# a = np.array([[1,2,3],[4,5,6],[7,8,9]])
-#
 # b = np.array([1,0,1])
 #
 # c = np.array([0,1,1])
@@ -45,19 +43,3 @@ from scipy.misc import toimage
 # b = np.array([1,2,3,4])
 #
 # print a*b
-
-data = np.load('data/triplet_mnist.npz')
-
-test_X = data['train_X']
-train_Y = data['test_X']
-
-print repr(test_X[0].tostring())
-
-
-
-
-
-
-
-
-

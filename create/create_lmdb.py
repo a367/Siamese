@@ -42,7 +42,7 @@ def create_triplet_lmdb(npz_path, lmdb_name):
     print train_imgs.shape
 
     with lmdb.open('data/' + lmdb_name, map_size=int(1e12)).begin(write=True) as db:
-        store_datums(db, train_imgs, train_num)
+        store_datums(db, train_imgs, train_num, 3)
 
 
 def create_contrastive_lmdb(npz_path, lmdb_name):
@@ -74,4 +74,5 @@ def create_test_contrastive_lmdb(npz_path, lmdb_name):
 if __name__ == '__main__':
     # np.set_printoptions(threshold=np.nan)
     # create_contrastive_lmdb('data/contrastive_mnist.npz', 'contrastive_lmdb')
-    create_test_contrastive_lmdb('data/contrastive_mnist.npz', 'contrastive_test_lmdb')
+    # create_test_contrastive_lmdb('data/contrastive_mnist.npz', 'contrastive_test_lmdb')
+    create_triplet_lmdb('data/triplet_mnist.npz', 'triplet_lmdb')

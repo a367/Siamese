@@ -2,12 +2,7 @@ import caffe
 import numpy as np
 
 
-class EuclideanDistanceLayer(caffe.Layer):
-    """
-    Compute the Euclidean Loss in the same manner as the C++ EuclideanLossLayer
-    to demonstrate the class interface for developing layers in Python.
-    """
-
+class VerificationLayer(caffe.Layer):
     def setup(self, bottom, top):
         # check input pair
         if len(bottom) != 4:
@@ -29,13 +24,12 @@ class EuclideanDistanceLayer(caffe.Layer):
         diff = bottom[0].data - bottom[1].data
         dis = np.sqrt(np.sum(diff ** 2, axis=1))
 
-        # np.set_printoptions(threshold='nan')
-        # with open('test.txt', 'w') as f:
-        #     f.write(str(np.hstack((dis.reshape(-1,1), sims.reshape(-1,1)))))
-        #
-        # raise Exception("Inputs must have the same dimension.")
-
         normal_dis = (dis - np.min(dis)) / (np.max(dis) - np.min(dis))
+
+        np.set_printoptions(threshold='nan')
+        with open('test.txt', 'w') as f:
+            f.write(str(np.hstack((dis.reshape(-1, 1), sims.reshape(-1, 1)))))
+
         pred = normal_dis <= threshold
 
         # confusion matrix
@@ -43,9 +37,6 @@ class EuclideanDistanceLayer(caffe.Layer):
         FP = np.sum(pred * (1 - sims))
         FN = np.sum((1 - pred) * sims)
         TN = np.sum((1 - pred) * (1 - sims))
-
-        # print normal_dis
-        # print 'pred:', (normal_dis <= threshold).astype(np.int)
 
         # compute accuracy
         top[0].data[...] = np.mean(pred == sims)
@@ -55,9 +46,6 @@ class EuclideanDistanceLayer(caffe.Layer):
 
         # compute FPR
         top[2].data[...] = FP / (TN + FP)
-
-        # top[0].data[...] = np.sum(self.diff ** 2) / bottom[0].num / 2.
-        # top[0].data[...] = np.sqrt(np.sum(self.diff ** 2, axis=1))
 
     def backward(self, top, propagate_down, bottom):
         # for i in range(2):
@@ -69,3 +57,5 @@ class EuclideanDistanceLayer(caffe.Layer):
         #         sign = -1
         #     bottom[i].diff[...] = sign * self.diff / bottom[i].num
         raise Exception("No backward!!!!")
+
+

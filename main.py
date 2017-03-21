@@ -12,6 +12,7 @@ from caffe.proto import caffe_pb2
 from caffe.io import datum_to_array
 import matplotlib.pyplot as plt
 from scipy.misc import toimage
+from rms import SLDataSet, train_msrl
 
 
 def generate_mean_image():
@@ -36,57 +37,115 @@ def train(solver_path, log_path):
     os.system('~/caffe/build/tools/caffe train --solver %s -gpu 3  2>&1 | tee %s' % (solver_path, log_path))
 
 
-def compute_accuracy(net, pair_imgs, sims, threshold):
-    out = net.forward(pair_data=pair_imgs, sim=sims, threshold=threshold)
+def compute_accuracy(net, M, cnn_test_X_1, cnn_test_X_2, sims, threshold, use_rms):
+    # print cnn_test_X_1
+    # print cnn_test_X_2
 
-    return out['accuracy'][0], out['TPR'][0], out['FPR'][0]
+
+    if use_rms:
+        # dis = np.diag(np.dot(np.dot(cnn_test_X_1.T, M), cnn_test_X_2))
+        dis = np.sum(np.dot(cnn_test_X_1.T, M).T * cnn_test_X_2, axis=0)
+    else:
+        dis = np.sqrt(np.sum((cnn_test_X_1 - cnn_test_X_2) ** 2, axis=0))
+    normal_dis = (dis - np.min(dis)) / (np.max(dis) - np.min(dis))
+
+    if use_rms:
+        pred = normal_dis >= threshold
+    else:
+        pred = normal_dis <= threshold
+
+    # confusion matrix
+    TP = np.sum(pred * sims)
+    FP = np.sum(pred * (1 - sims))
+    FN = np.sum((1 - pred) * sims)
+    TN = np.sum((1 - pred) * (1 - sims))
+
+    accuracy = np.mean(pred == sims)
+    TPR = TP / float(TP + FN)
+    FPR = FP / float(TN + FP)
+
+    return accuracy, TPR, FPR
 
 
-def apply(deploy_path, npz_path):
-    net = caffe.Net(deploy_path, "log/_iter_50000.caffemodel", caffe.TEST)
-    # net = caffe.Net(deploy_path, "test.caffemodel", caffe.TEST)
+def apply(deploy_path, npz_path, caffemodel_path, params, use_rms=True, use_l2=False):
+    caffe.set_mode_gpu()
+    net = caffe.Net(deploy_path, caffemodel_path, caffe.TEST)
 
+    # feature type
+    feat_type = "l2_feat" if use_l2 else "feat"
+
+    # load data
     data = np.load(npz_path)
 
-    test_X = []
-    test_Y = []
-    for i in xrange(10000):
-        label, img = get_data_for_case_from_lmdb('data/contrastive_test_lmdb', '%.8d' % i)
-        test_X.append(img)
-        test_Y.append(label)
+    ##############
+    # train data #
+    ##############
+    train_X = data['train_X'].reshape(60000, 3, 28, 28)
 
-    # test_X = data['test_X'][:10000] / 256.0
-    # test_Y = data['test_Y'][:10000]
-    # net.blobs['pair_data'].reshape(*pair_imgs.shape)
+    src_train_X_a = train_X[:, :1, :, :].astype(np.uint8)
+    src_train_X_p = train_X[:, 1:2, :, :].astype(np.uint8)
+    src_train_X_m = train_X[:, 2:, :, :].astype(np.uint8)
+    print 'train_X shape:', train_X.shape
 
-    test_X = np.array(test_X) / 256.0
-    test_Y = np.array(test_Y)
+    net.blobs['data'].reshape(*src_train_X_a.shape)
+    cnn_train_X_a = net.forward(data=src_train_X_a)[feat_type].copy()
+    cnn_train_X_p = net.forward(data=src_train_X_p)[feat_type].copy()
+    cnn_train_X_m = net.forward(data=src_train_X_m)[feat_type].copy()
 
-    # out = net.forward(pair_data=test_X, sim=test_Y, threshold=np.array([1]))
-    #
-    # print out['loss']
-    # return
+    ##############
+    # test data  #
+    ##############
+    test_X = data['test_X']
+    test_Y = data['test_Y']
+
+    imgs_1 = test_X[:, :1, :, :].astype(np.uint8)
+    imgs_2 = test_X[:, 1:, :, :].astype(np.uint8)
+    print 'test_X shape:', test_X.shape
+
+    net.blobs['data'].reshape(*imgs_1.shape)
+    cnn_test_X_1 = net.forward(data=imgs_1)[feat_type].copy().T.astype("float32")
+    cnn_test_X_2 = net.forward(data=imgs_2)[feat_type].copy().T.astype("float32")
+
+    print 'train cnn is ok!'
+
+    ##############
+    # test phase #
+    ##############
+    M = None
+    if use_rms:
+        train_data_set = SLDataSet({'train_X': cnn_train_X_a, 'train_X_plus': cnn_train_X_p, 'train_X_minus': cnn_train_X_m})
+        M = train_msrl(train_data_set, params)
+    print 'M:'
+    print M
 
     TPR_arr = []
     FPR_arr = []
 
     point_num = 50
-
     for i in xrange(point_num):
-        accuracy, TPR, FPR = compute_accuracy(net, test_X, test_Y, np.array([i / float(point_num)]))
+        accuracy, TPR, FPR = compute_accuracy(net, M, cnn_test_X_1, cnn_test_X_2, test_Y, i / float(point_num), use_rms)
         print 'accuracy: %s,   TPR: %s,   FPR: %s' % (accuracy, TPR, FPR)
         TPR_arr.append(TPR)
         FPR_arr.append(FPR)
 
-    print TPR_arr
-    print FPR_arr
+    print 'TPR =', TPR_arr
+    print 'FPR =', FPR_arr
 
 
-if __name__ == '__main__':
+def main():
     # train triplet loss
     # train('model/triplet_solver.prototxt', 'log/train.log')
 
     # train contrastive loss
     # train('model/siamese/mnist_siamese_solver.prototxt', 'log/siamese/train.log')
 
-    apply("model/triplet_deploy.prototxt", "data/contrastive_mnist.npz")
+    params = {'lr': 1e-1, 'ep': 200, 'lambda': 0, 'epsilon': 10e0, 'mu': 0.5}
+    deploy_path = "model/triplet_l2_deploy.prototxt"
+    data_path = "data/triplet_mnist.npz"
+    caffemodel_path = "log/triplet_l2_50k.caffemodel"
+
+    apply(deploy_path, data_path, caffemodel_path, params, use_rms=True, use_l2=True)
+
+
+if __name__ == '__main__':
+    main()

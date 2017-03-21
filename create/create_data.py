@@ -192,6 +192,8 @@ def create_mnist_triple_data(npz_path):
              test_X=test_X, test_X_plus=test_X_plus, test_X_minus=test_X_minus)
 
 
+
+
 def main():
     # create_mnist_triple_data('data_set/MNIST/mnist.npz')
     pass
