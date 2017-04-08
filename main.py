@@ -7,6 +7,7 @@
 import os
 import lmdb
 import numpy as np
+from PIL import Image
 import caffe
 from caffe.proto import caffe_pb2
 from caffe.io import datum_to_array
@@ -34,7 +35,7 @@ def get_data_for_case_from_lmdb(lmdb_name, idx):
 
 
 def train(solver_path, log_path):
-    os.system('~/caffe/build/tools/caffe train --solver %s -gpu 3  2>&1 | tee %s' % (solver_path, log_path))
+    os.system('~/caffe/build/tools/caffe train --solver %s -gpu 2  2>&1 | tee %s' % (solver_path, log_path))
 
 
 def compute_accuracy(net, M, cnn_test_X_1, cnn_test_X_2, sims, threshold, use_rms):
@@ -139,12 +140,17 @@ def main():
     # train contrastive loss
     # train('model/siamese/mnist_siamese_solver.prototxt', 'log/siamese/train.log')
 
-    params = {'lr': 1e-1, 'ep': 200, 'lambda': 0, 'epsilon': 10e0, 'mu': 0.5}
-    deploy_path = "model/triplet_l2_deploy.prototxt"
-    data_path = "data/triplet_mnist.npz"
-    caffemodel_path = "log/triplet_l2_50k.caffemodel"
+    # params = {'lr': 1e-1, 'ep': 200, 'lambda': 0, 'epsilon': 10e0, 'mu': 0.5}
+    # deploy_path = "model/triplet_l2_deploy.prototxt"
+    # data_path = "data/triplet_mnist.npz"
+    # caffemodel_path = "log/triplet_l2_50k.caffemodel"
+    #
+    # apply(deploy_path, data_path, caffemodel_path, params, use_rms=True, use_l2=True)
 
-    apply(deploy_path, data_path, caffemodel_path, params, use_rms=True, use_l2=True)
+    # label, feature = get_data_for_case_from_lmdb('data/CASIA/casia_lmdb', "%.8d" % 345)
+    # print label
+
+    train('model/face/face_solver.prototxt', 'log/face/train.log')
 
 
 if __name__ == '__main__':

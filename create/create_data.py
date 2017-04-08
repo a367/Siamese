@@ -3,9 +3,11 @@
 # @Author  : Zhixin Piao
 # @Email   : piaozhx@seu.edu.cn
 
+from PIL import Image, ImageDraw
 import numpy as np
 import struct
 import random
+import os
 
 DATA_SET_PATH = '../data'
 
@@ -192,10 +194,65 @@ def create_mnist_triple_data(npz_path):
              test_X=test_X, test_X_plus=test_X_plus, test_X_minus=test_X_minus)
 
 
+def create_CASIA_data(imgs_path, shape=(96, 112)):
+    count = 0
+    X = []
+    for i, (parent, dirnames, filenames) in enumerate(os.walk(imgs_path)):
+        if i == 0:
+            continue
+        identity = []
+        for img_name in filenames:
+            if img_name == 'Thumbs.db':
+                continue
+            img_path = os.path.join(parent, img_name)
+            img = Image.open(img_path)
+            img = img.resize(shape)
+            img = np.array(img).astype(np.uint8)
+
+            # change img data structure to (width, height)
+            img = np.rollaxis(img, 1)
+            identity.append(img.reshape(1, 96, 112))
+
+        X.append(identity)
+
+    X = np.array(X)
+    print X.shape
+    np.savez('data/CASIA/src_casia.npz', X=X)
+
+
+def create_single_CASIA_data(src_npz_path, shape=(1, 96, 112)):
+    src = np.load(src_npz_path)
+    train_imgs = src['X']
+
+    id_num = train_imgs.shape[0]
+    input_data = []
+    input_label = []
+    for i in xrange(id_num):
+        for img_data in train_imgs[i]:
+            input_data.append(np.array(img_data).reshape(shape))
+            input_label.append(i)
+
+    input_data = np.array(input_data)
+    input_label = np.array(input_label)
+
+    input_num = len(input_data)
+    sample_idx = range(input_num)
+    random.shuffle(sample_idx)
+
+    input_data = input_data[sample_idx]
+    input_label = input_label[sample_idx]
+
+    print 'train_X shape:', input_data.shape
+    print 'train_Y shape:', input_label.shape
+
+    np.savez('data/CASIA/casia.npz', train_X=input_data, train_Y=input_label)
 
 
 def main():
     # create_mnist_triple_data('data_set/MNIST/mnist.npz')
+    # create_CASIA_data('data/CASIA/CASIA-Webface_align_3/image')
+    # create_single_CASIA_data('data/CASIA/src_casia.npz')
+
     pass
 
 

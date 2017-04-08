@@ -58,7 +58,7 @@ if __name__ == '__main__':
            0.0068177260878283536]
 
 
-    # for line in open('test.txt'):
+    # for line in open('test.txt'):R
     #     s = line.split()
     #     TPR_4.append(s[1])
     #     FPR_4.append(s[2])

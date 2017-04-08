@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2017/3/10 下午2:03
+# @Time    : 2017/4/7 下午10:31
 # @Author  : Zhixin Piao 
 # @Email   : piaozhx@seu.edu.cn
 
 import caffe
 import numpy as np
+import config
 
 
-
-
-class TripletLayer(caffe.Layer):
+class TripletLossLayer(caffe.Layer):
     def setup(self, bottom, top):
-        self.margin = 1
+        self.margin = config.MARGIN
         top[0].reshape(1)
 
     def reshape(self, bottom, top):
@@ -39,9 +38,9 @@ class TripletLayer(caffe.Layer):
         bottom[2].diff[...] = 2.0 * (x - x_m) * self.check / bottom[1].num
 
 
-class TripletLayer2(caffe.Layer):
+class TripletLossLayer2(caffe.Layer):
     def setup(self, bottom, top):
-        self.margin = 1
+        self.margin = config.MARGIN
         top[0].reshape(1)
 
     def reshape(self, bottom, top):
@@ -67,50 +66,3 @@ class TripletLayer2(caffe.Layer):
         bottom[1].diff[...] = (x_p - x) / bottom[1].num
         bottom[2].diff[...] = ((self.dis_m - self.margin) / (1e-4 + self.dis_m)).reshape(-1, 1) * (x_m - x) * self.check / bottom[2].num
         bottom[0].diff[...] = -bottom[1].diff - bottom[2].diff
-
-
-class ContrastiveLayer(caffe.Layer):
-    def setup(self, bottom, top):
-        self.margin = 1
-        top[0].reshape(1)
-
-    def reshape(self, bottom, top):
-        pass
-
-    def forward(self, bottom, top):
-        x = bottom[0].data
-        x_2 = bottom[1].data
-        sim = bottom[2].data
-
-        # legacy version
-        dis_p = np.sum(np.square((x - x_2)), axis=1)
-        loss_m = np.maximum(0, self.margin - dis_p)
-        self.check = (self.margin - dis_p >= 0).reshape(-1, 1)
-
-        # current version
-        # dis_p = np.sum(np.square((x - x_2)), axis=1)
-        # self.dis_m = np.sqrt(dis_p)
-        # loss_m = np.square(np.maximum(0, self.margin - self.dis_m))
-        # self.check = (self.margin - self.dis_m >= 0).reshape(-1, 1)
-
-        # loss
-        top[0].data[...] = np.mean((1 - sim) * loss_m + sim * dis_p) / 2.0
-
-    def backward(self, top, propagate_down, bottom):
-        x = bottom[0].data
-        x_2 = bottom[1].data
-        sim = bottom[2].data.reshape(-1, 1)
-
-        alpha = top[0].diff / float(bottom[0].num)
-
-        # legacy version
-        grad_sim = (x - x_2) * alpha
-        grad_not_sim = (x_2 - x) * self.check * alpha
-
-        # current version
-        # grad_sim = (x - x_2) * alpha
-        # grad_not_sim = ((self.dis_m - self.margin) / (self.dis_m + 1e-4)).reshape(-1, 1) * (x - x_2) * self.check * alpha
-
-        grad = grad_sim * sim + grad_not_sim * (1 - sim)
-        bottom[0].diff[...] = grad
-        bottom[1].diff[...] = -grad
