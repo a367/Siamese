@@ -248,11 +248,27 @@ def create_single_CASIA_data(src_npz_path, shape=(1, 96, 112)):
     np.savez('data/CASIA/casia.npz', train_X=input_data, train_Y=input_label)
 
 
+def create_src_mnist_data(npz_path, shape=(1,28,28)):
+    src = np.load(npz_path)
+    train_X = src['train_X']
+    train_Y = src['train_Y']
+
+    train_num = train_X.shape[0]
+
+    X = [[] for _ in xrange(10)]
+    for i in xrange(train_num):
+        for j in xrange(10):
+            if train_Y[i][j] != 0:
+                X[j].append(train_X[i].reshape(shape).astype(np.uint8))
+
+    np.savez('data/mnist/src_mnist.npz', X=X)
+
 def main():
     # create_mnist_triple_data('data_set/MNIST/mnist.npz')
     # create_CASIA_data('data/CASIA/CASIA-Webface_align_3/image')
     # create_single_CASIA_data('data/CASIA/src_casia.npz')
 
+    create_src_mnist_data('data/mnist/mnist.npz')
     pass
 
 

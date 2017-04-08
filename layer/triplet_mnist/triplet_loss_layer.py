@@ -5,13 +5,12 @@
 
 import caffe
 import numpy as np
+import config
 
 
-
-
-class TripletLayer(caffe.Layer):
+class TripletLossLayer(caffe.Layer):
     def setup(self, bottom, top):
-        self.margin = 1
+        self.margin = config.MARGIN
         top[0].reshape(1)
 
     def reshape(self, bottom, top):
@@ -39,9 +38,9 @@ class TripletLayer(caffe.Layer):
         bottom[2].diff[...] = 2.0 * (x - x_m) * self.check / bottom[1].num
 
 
-class TripletLayer2(caffe.Layer):
+class TripletLossLayer2(caffe.Layer):
     def setup(self, bottom, top):
-        self.margin = 1
+        self.margin = config.MARGIN
         top[0].reshape(1)
 
     def reshape(self, bottom, top):
@@ -71,7 +70,7 @@ class TripletLayer2(caffe.Layer):
 
 class ContrastiveLayer(caffe.Layer):
     def setup(self, bottom, top):
-        self.margin = 1
+        self.margin = config.MARGIN
         top[0].reshape(1)
 
     def reshape(self, bottom, top):

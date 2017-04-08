@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2017/4/7 下午8:25
+# @Time    : 2017/4/8 下午5:03
 # @Author  : Zhixin Piao 
 # @Email   : piaozhx@seu.edu.cn
 
@@ -14,9 +14,9 @@ MIN_IDENTITY_SIZE = 20
 
 MAX_IDENTITY_SIZE = 40
 
-BLOB_SHAPE = (BATCH_SIZE, 1, 96, 112)
+BLOB_SHAPE = (BATCH_SIZE, 1, 28, 28)
 
-DATA_PATH = 'data/CASIA/src_casia.npz'
+DATA_PATH = 'data/mnist/src_mnist.npz'
 
 MEAN_VALUE = 127.5
 

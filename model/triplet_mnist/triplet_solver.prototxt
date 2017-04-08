@@ -1,4 +1,4 @@
-net: "model/triplet_train.prototxt"
+net: "model/triplet_mnist/triplet_train.prototxt"
 
 #test_iter: -1
 # Carry out testing every 500 training iterations.
@@ -12,7 +12,7 @@ lr_policy: "inv"
 gamma: 0.0001
 power: 0.75
 # Display every 100 iterations
-display: 100
+display: 10
 # The maximum number of iterations
 max_iter: 50000
 # snapshot intermediate results
@@ -20,3 +20,5 @@ snapshot: 50000
 snapshot_prefix: "log/"
 # solver mode: CPU or GPU
 solver_mode: GPU
+
+#debug_info: true

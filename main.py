@@ -13,6 +13,7 @@ from caffe.proto import caffe_pb2
 from caffe.io import datum_to_array
 import matplotlib.pyplot as plt
 from scipy.misc import toimage
+from google.protobuf import text_format
 from rms import SLDataSet, train_msrl
 
 
@@ -34,8 +35,8 @@ def get_data_for_case_from_lmdb(lmdb_name, idx):
     return label, feature
 
 
-def train(solver_path, log_path):
-    os.system('~/caffe/build/tools/caffe train --solver %s -gpu 2  2>&1 | tee %s' % (solver_path, log_path))
+def train(solver_path, log_path, gpu):
+    os.system('~/caffe/build/tools/caffe train --solver %s -gpu %s  2>&1 | tee %s' % (solver_path, gpu, log_path))
 
 
 def compute_accuracy(net, M, cnn_test_X_1, cnn_test_X_2, sims, threshold, use_rms):
@@ -133,12 +134,43 @@ def apply(deploy_path, npz_path, caffemodel_path, params, use_rms=True, use_l2=F
     print 'FPR =', FPR_arr
 
 
+def create_solver_prototxt(src_solover_path, prefix):
+    # get source solver config
+    solver_config = caffe_pb2.SolverParameter()
+    with open(src_solover_path, 'r') as f:
+        text_format.Merge(f.read(), solver_config)
+
+    # change some parameters
+    solver_config.snapshot_prefix = prefix
+
+    # set temp new config
+    new_solver_config = text_format.MessageToString(solver_config)
+    with open('tmp/temp.prototxt', 'w') as f:
+        f.write(new_solver_config)
+
+
+def run_facenet(train_name, gpu):
+    os.system('rm -rf log/face/%s; mkdir log/face/%s' % (train_name, train_name))
+    os.system('mkdir log/face/%s/snapshot' % train_name)
+
+    create_solver_prototxt('model/face/face_solver.prototxt', "log/face/%s/snapshot/face_train" % train_name)
+    train('tmp/temp.prototxt', 'log/face/%s/train.log' % train_name, gpu=gpu)
+
+
+def run_triplet_mnist(train_name, gpu):
+    os.system('rm -rf log/triplet_mnist/%s; mkdir log/triplet_mnist/%s' % (train_name, train_name))
+    os.system('mkdir log/triplet_mnist/%s/snapshot' % train_name)
+
+    create_solver_prototxt('model/triplet_mnist/triplet_solver.prototxt', "log/triplet_mnist/%s/snapshot/siamese_train" % train_name)
+    train('tmp/temp.prototxt', 'log/triplet_mnist/%s/train.log' % train_name, gpu=gpu)
+
+
 def main():
     # train triplet loss
     # train('model/triplet_solver.prototxt', 'log/train.log')
 
     # train contrastive loss
-    # train('model/siamese/mnist_siamese_solver.prototxt', 'log/siamese/train.log')
+    # train('model/siamese/siamese_solver.prototxt', 'log/siamese/train.log')
 
     # params = {'lr': 1e-1, 'ep': 200, 'lambda': 0, 'epsilon': 10e0, 'mu': 0.5}
     # deploy_path = "model/triplet_l2_deploy.prototxt"
@@ -147,10 +179,7 @@ def main():
     #
     # apply(deploy_path, data_path, caffemodel_path, params, use_rms=True, use_l2=True)
 
-    # label, feature = get_data_for_case_from_lmdb('data/CASIA/casia_lmdb', "%.8d" % 345)
-    # print label
-
-    train('model/face/face_solver.prototxt', 'log/face/train.log')
+    run_triplet_mnist('l2_50k_hard_neg_loss2', 2)
 
 
 if __name__ == '__main__':

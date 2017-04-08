@@ -16,7 +16,7 @@ display: 1
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 1000
-snapshot_prefix: "log/face/face_snapshot/face_train_test"
+snapshot_prefix: "log/face/face_snapshot/face_train"
 
 solver_mode: GPU
 #debug_info: true
