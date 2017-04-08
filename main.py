@@ -179,8 +179,8 @@ def main():
     #
     # apply(deploy_path, data_path, caffemodel_path, params, use_rms=True, use_l2=True)
 
-    run_triplet_mnist('l2_50k_hard_neg_loss2', 2)
-
+    # run_triplet_mnist('l2_50k_hard_neg_loss2', 2)
+    run_facenet('l2_50k_hard_neg_loss2', 3)
 
 if __name__ == '__main__':
     main()

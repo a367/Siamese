@@ -62,7 +62,7 @@ class TripletSelectLayer(caffe.Layer):
                 top_n.append(n_data)
                 self.idx_map.append([a_idx, p_idx, n_idx])
 
-        print 'total number of triplet is %d' % len(self.idx_map)
+        # print 'total number of triplet is %d' % len(self.idx_map)
 
         top[0].reshape(*np.array(top_a).shape)
         top[1].reshape(*np.array(top_a).shape)
