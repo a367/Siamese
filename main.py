@@ -21,20 +21,6 @@ def generate_mean_image():
     os.system('~/caffe/build/tools/compute_image_mean -backend=lmdb data/train_lmdb data/mean.binaryproto')
 
 
-def get_data_for_case_from_lmdb(lmdb_name, idx):
-    lmdb_env = lmdb.open(lmdb_name, readonly=True)
-    lmdb_txn = lmdb_env.begin()
-
-    raw_datum = lmdb_txn.get(idx)
-    datum = caffe_pb2.Datum()
-    datum.ParseFromString(raw_datum)
-
-    feature = datum_to_array(datum)
-    label = datum.label
-
-    return label, feature
-
-
 def train(solver_path, log_path, gpu):
     os.system('~/caffe/build/tools/caffe train --solver %s -gpu %s  2>&1 | tee %s' % (solver_path, gpu, log_path))
 
@@ -161,7 +147,7 @@ def run_triplet_mnist(train_name, gpu):
     os.system('rm -rf log/triplet_mnist/%s; mkdir log/triplet_mnist/%s' % (train_name, train_name))
     os.system('mkdir log/triplet_mnist/%s/snapshot' % train_name)
 
-    create_solver_prototxt('model/triplet_mnist/triplet_solver.prototxt', "log/triplet_mnist/%s/snapshot/siamese_train" % train_name)
+    create_solver_prototxt('model/triplet_mnist/triplet_solver.prototxt', "log/triplet_mnist/%s/snapshot/train" % train_name)
     train('tmp/temp.prototxt', 'log/triplet_mnist/%s/train.log' % train_name, gpu=gpu)
 
 
@@ -179,8 +165,9 @@ def main():
     #
     # apply(deploy_path, data_path, caffemodel_path, params, use_rms=True, use_l2=True)
 
-    # run_triplet_mnist('l2_50k_hard_neg_loss2', 2)
-    run_facenet('l2_50k_hard_neg_loss2', 3)
+    # run_triplet_mnist('l2_50k_batch200_closest_hard_neg_loss2', 0)
+    run_facenet('small_data_l2_50k_batch200_closest_hard_neg_loss1', 0)
+
 
 if __name__ == '__main__':
     main()

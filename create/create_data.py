@@ -5,8 +5,10 @@
 
 from PIL import Image, ImageDraw
 import numpy as np
+import scipy.io as sio
 import struct
 import random
+import json
 import os
 
 DATA_SET_PATH = '../data'
@@ -248,7 +250,7 @@ def create_single_CASIA_data(src_npz_path, shape=(1, 96, 112)):
     np.savez('data/CASIA/casia.npz', train_X=input_data, train_Y=input_label)
 
 
-def create_src_mnist_data(npz_path, shape=(1,28,28)):
+def create_src_mnist_data(npz_path, shape=(1, 28, 28)):
     src = np.load(npz_path)
     train_X = src['train_X']
     train_Y = src['train_Y']
@@ -263,12 +265,255 @@ def create_src_mnist_data(npz_path, shape=(1,28,28)):
 
     np.savez('data/mnist/src_mnist.npz', X=X)
 
+
+def create_test_mnist_data(npz_path, shape=(1, 28, 28)):
+    src = np.load(npz_path)
+    test_X = src['test_X']
+    test_Y = src['test_Y']
+
+    test_num = test_X.shape[0]
+
+    X = [[] for _ in xrange(10)]
+    for i in xrange(test_num):
+        for j in xrange(10):
+            if test_Y[i][j] != 0:
+                X[j].append(test_X[i].reshape(shape).astype(np.uint8))
+
+    contrastive_num = 10000
+    match_num = dismatch_num = contrastive_num / 2
+
+    test_X1 = []
+    test_X2 = []
+    test_Y = []
+    for i in xrange(match_num):
+        cid = random.randint(0, 9)
+        img1, img2 = random.sample(X[cid], 2)
+
+        test_X1.append(img1)
+        test_X2.append(img2)
+        test_Y.append(1)
+
+    for i in xrange(dismatch_num):
+        cid1, cid2 = random.sample(range(10), 2)
+
+        test_X1.append(random.choice(X[cid1]))
+        test_X2.append(random.choice(X[cid2]))
+        test_Y.append(0)
+
+    test_X1 = np.array(test_X1)
+    test_X2 = np.array(test_X2)
+    test_Y = np.array(test_Y)
+
+    print 'test_X1 shape:', test_X1.shape
+    print 'test_X2 shape:', test_X2.shape
+    print 'test_Y shape:', test_Y.shape
+
+    np.savez('data/mnist/test_mnist.npz', test_X1=test_X1, test_X2=test_X2, test_Y=test_Y)
+
+
+def create_test_lfw_data(npz_path, shape=(1, 96, 112)):
+    def get_grey_img(array_img):
+        src_img = np.rollaxis(array_img, 2)
+        src_img = np.rollaxis(src_img, 1, 3)
+
+        ret_img = np.array(Image.fromarray(src_img).convert('L'))
+        ret_img = np.rollaxis(ret_img, 1).reshape(shape)
+
+        return ret_img
+
+    src = np.load(npz_path)
+    X = src['X']
+    Y = src['Y']
+
+    pair_num = 600
+    fold_num = 10
+
+    test_X1 = [[] for _ in xrange(fold_num)]
+    test_X2 = [[] for _ in xrange(fold_num)]
+    test_Y = [[] for _ in xrange(fold_num)]
+
+    for i in xrange(fold_num):
+        for j in xrange(pair_num):
+            img1 = get_grey_img(X[i * pair_num + j][0])
+            img2 = get_grey_img(X[i * pair_num + j][1])
+
+            test_X1[i].append(img1)
+            test_X2[i].append(img2)
+            test_Y[i].append(Y[i * pair_num + j])
+            # img.save('test.jpg')
+
+    test_X1 = np.array(test_X1)
+    test_X2 = np.array(test_X2)
+    test_Y = np.array(test_Y)
+
+    np.savez('data/lfw/test_lfw.npz', test_X1=test_X1, test_X2=test_X2, test_Y=test_Y)
+
+
+def create_person_reid_train_test_data(mat_path):
+    data = sio.loadmat(mat_path)
+
+    x_view1 = data['Xview1'].T
+    x_view2 = data['Xview2'].T
+    x_view = np.array([x_view1, x_view2])
+
+    total_num = x_view1.shape[0]
+    train_num = total_num / 2
+    test_num = total_num - train_num
+    random_idx = range(total_num)
+
+    src_train_X = []
+    src_train_Y = []
+    src_test_X = []
+    src_test_Y = []
+    triplet_train_X = []
+    test_X = []
+    test_Y = []
+
+    for _ in xrange(10):
+        random.shuffle(random_idx)
+
+        # divide train_view and test_view
+        random_x_view = x_view[:, random_idx, :]
+        train_view = random_x_view[:, :train_num, :]
+        test_view = random_x_view[:, train_num:, :]
+
+        # add source train/test_view in source train/test data set
+        src_train_X.append(train_view)
+        src_train_Y.append([1] * train_num)
+        src_test_X.append(test_view)
+        src_test_Y.append([1] * test_num)
+
+        # create negative case of train view
+        neg_train_view = [[]]
+        for i in xrange(train_num):
+            id1 = i
+            while id1 == i:
+                id1 = random.randint(0, train_num - 1)
+            neg_train_view[0].append(train_view[random.randint(0, 1), id1])
+
+        # set negative case in triplet train view:
+        neg_train_view = np.array(neg_train_view)
+        train_view = np.vstack((train_view, neg_train_view))
+        triplet_train_X.append(train_view)
+
+        # create negative case of test view
+        neg_test_view = [[], []]
+        sample_ids = range(test_num)
+        for i in xrange(test_num):
+            id1, id2 = random.sample(sample_ids, 2)
+            neg_test_view[0].append(test_view[0, id1, :])
+            neg_test_view[1].append(test_view[1, id2, :])
+
+        # set negative case in test view
+        neg_test_view = np.array(neg_test_view)
+        test_view = np.hstack((test_view, neg_test_view))
+
+        # shuffle test view data
+        random_test_idx = range(test_num * 2)
+        random.shuffle(random_test_idx)
+        test_view = test_view[:, random_test_idx, :]
+        test_label = np.array([1] * test_num + [0] * test_num)
+        test_label = test_label[random_test_idx]
+
+        # add source train_view and test_view in source train data set and test data set
+        test_X.append(test_view)
+        test_Y.append(test_label)
+
+    # change type to np.array and output data shape
+    data_list = ['src_train_X', 'src_train_Y', 'src_test_X', 'src_test_Y', 'triplet_train_X', 'test_X', 'test_Y']
+    for data_name in data_list:
+        exec ('%s = np.array(%s)' % (data_name, data_name))
+        print '%s shape: %s' % (data_name, eval('%s.shape' % data_name))
+
+    np.savez('data/person-reid/viper.npz', **dict([(n, eval(n)) for n in data_list]))
+
+
+def compute_accuracy_by_dis(dis, sims, threshold):
+    normal_dis = (dis - np.min(dis)) / (np.max(dis) - np.min(dis))
+    pred = normal_dis <= threshold
+
+    # confusion matrix
+    TP = np.sum(pred * sims)
+    FP = np.sum(pred * (1 - sims))
+    FN = np.sum((1 - pred) * sims)
+    TN = np.sum((1 - pred) * (1 - sims))
+
+    accuracy = np.mean(pred == sims)
+    TPR = TP / float(TP + FN)
+    FPR = FP / float(TN + FP)
+
+    return accuracy, TPR, FPR
+
+
+def create_person_reid_triplet_train_test_data(npz_path):
+    src = np.load(npz_path)
+
+    train_X1 = src['src_train_X'][0, 0, :, :]
+    train_X2 = src['src_train_X'][0, 1, :, :]
+    test_X = src['src_test_X'][0]
+    test_Y = src['src_test_Y'][0]
+
+    num = train_X1.shape[0]
+
+    triplet_X = [[], [], []]
+
+    for i in xrange(num):
+        triplet_X[0] += [train_X1[i].copy() for _ in xrange((num - 1) * 2)]
+        triplet_X[1] += [train_X2[i].copy() for _ in xrange((num - 1) * 2)]
+        for j in xrange(num):
+            if j == i:
+                continue
+            triplet_X[2].append(train_X1[j])
+            triplet_X[2].append(train_X2[j])
+
+    triplet_X = np.array(triplet_X)
+    triplet_num = triplet_X.shape[1]
+
+    # shuffle triplet_X
+    random_idx = range(triplet_num)
+    random.shuffle(random_idx)
+    triplet_X = triplet_X[:, random_idx, :]
+
+    print 'triplet_X shape:', triplet_X.shape
+    print 'test_X shape:', test_X.shape
+    print 'test_Y shape:', test_Y.shape
+
+    np.savez('data/person-reid/triplet_viper.npz', triplet_X=triplet_X, test_X=test_X, test_Y=test_Y)
+
+
+def create_person_reid_small_triplet_data(l1_norm=True):
+    src = np.load('data/person-reid/triplet_viper.npz')
+    triplet_X = src['triplet_X']
+    num = triplet_X.shape[1]
+    triplet_X = triplet_X[:, :num / 10, :]
+
+    train_a = triplet_X[0, :, :]
+    train_p = triplet_X[1, :, :]
+    train_n = triplet_X[2, :, :]
+    test_X1 = src['test_X'][0, :, :]
+    test_X2 = src['test_X'][1, :, :]
+
+    data_list = ['train_a', 'train_p', 'train_n', 'test_X1', 'test_X2']
+
+    for data_name in data_list:
+        if l1_norm:
+            exec '%s = (%s / np.sum(np.abs(%s), axis=1).reshape(-1, 1))' % (data_name, data_name, data_name)
+        print '%s shape: %s' % (data_name, eval('%s.shape' % data_name))
+
+    np.savez('data/person-reid/small_triplet_viper.npz', **dict([(n, eval(n)) for n in data_list]))
+
+
 def main():
     # create_mnist_triple_data('data_set/MNIST/mnist.npz')
     # create_CASIA_data('data/CASIA/CASIA-Webface_align_3/image')
     # create_single_CASIA_data('data/CASIA/src_casia.npz')
 
-    create_src_mnist_data('data/mnist/mnist.npz')
+    # create_test_mnist_data('data/mnist/mnist.npz')
+    # create_test_lfw_data('data/lfw/contrastive_lfw.npz')
+    # create_person_reid_train_test_data('data/person-reid/viper_mix.mat')
+    # create_person_reid_triplet_train_test_data('data/person-reid/viper.npz')
+    create_person_reid_small_triplet_data()
+
     pass
 
 

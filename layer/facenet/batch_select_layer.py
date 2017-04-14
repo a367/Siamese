@@ -44,7 +44,7 @@ class DataLayer(caffe.Layer):
         src = np.load(config.DATA_PATH)
 
         # set train_imgs to memory
-        self.train_imgs = src['X']
+        self.train_imgs = src['X'][:40]
         self.person_num = self.train_imgs.shape[0]
         self.big_ids = [i if len(self.train_imgs[i]) >= config.MIN_IDENTITY_SIZE else None for i in xrange(len(self.train_imgs))]
         self.big_ids = filter(lambda x: x != None, self.big_ids)

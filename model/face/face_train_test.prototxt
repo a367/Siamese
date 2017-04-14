@@ -1157,7 +1157,7 @@ layer {
   top: "loss"
   python_param {
     module: "facenet"
-    layer: "TripletLossLayer2"
+    layer: "TripletLossLayer"
   }
   loss_weight: 1
 }

@@ -5,6 +5,7 @@
 
 import caffe
 import numpy as np
+import random
 import config
 from collections import defaultdict
 
@@ -12,26 +13,32 @@ from collections import defaultdict
 class TripletSelectLayer(caffe.Layer):
     def setup(self, bottom, top):
         """Setup the TripletSampleLayer."""
-        top[0].reshape(*bottom[0].data.shape)
-        top[1].reshape(*bottom[0].data.shape)
-        top[2].reshape(*bottom[0].data.shape)
+        # top[0].reshape(*bottom[0].data.shape)
+        # top[1].reshape(*bottom[0].data.shape)
+        # top[2].reshape(*bottom[0].data.shape)
         self.margin = config.MARGIN
 
     def forward(self, bottom, top):
         """Get blobs and copy them into this layer's top blob vector."""
 
-        def get_semi_hard_negative_case():
+        def get_semi_hard_negative_case(random_select=False):
+            ap = np.sum((a_data - p_data) ** 2)
+            closest_res = (None, None, None)
+            candidates = []
+
             for label, idxs in label2idx.iteritems():
                 if label == a_label:
                     continue
 
                 for idx in idxs:
                     n_data = bottom_data[idx]
-                    ap = np.sum((a_data - p_data) ** 2)
                     an = np.sum((a_data - n_data) ** 2)
                     if ap <= an <= ap + self.margin:
-                        return n_data, idx
-            return None, None
+                        if closest_res[0] is None or closest_res[2] > an - ap:
+                            closest_res = (n_data, idx, an - ap)
+                        candidates.append((n_data, idx, an - ap))
+
+            return random.choice(candidates) if random_select and candidates != [] else closest_res
 
         bottom_data = np.array(bottom[0].data)
         bottom_label = np.array(bottom[1].data)
@@ -52,7 +59,7 @@ class TripletSelectLayer(caffe.Layer):
 
             for p_idx in label2idx[a_label]:
                 p_data = bottom_data[p_idx]
-                n_data, n_idx = get_semi_hard_negative_case()
+                n_data, n_idx, _ = get_semi_hard_negative_case(random_select=False)
 
                 if p_idx == a_idx or n_data is None:
                     continue

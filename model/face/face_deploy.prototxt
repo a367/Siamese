@@ -1,8 +1,15 @@
-input: "data"
-input_dim: 1
-input_dim: 3
-input_dim: 112
-input_dim: 96
+name: "face_deploy"
+###############
+### input   ###
+###############
+
+layer {
+  name: "data"
+  type: "Input"
+  top: "data"
+  input_param { shape: { dim: 300 dim: 1 dim: 96 dim: 112 } }
+}
+
 layer {
   name: "conv1a"
   type: "Convolution"
@@ -1088,5 +1095,17 @@ layer {
       type: "constant"
       value: 0
     }
+  }
+}
+
+############## l2 norm ###############
+layer {
+  name: "norm2"
+  type: "Python"
+  bottom: "fc5"
+  top: "norm2"
+  python_param {
+    module: "facenet"
+    layer: "Norm2Layer"
   }
 }

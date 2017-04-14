@@ -43,3 +43,16 @@ from scipy.misc import toimage
 # b = np.array([1,2,3,4])
 #
 # print a*b
+
+# a = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+# b = np.array([[[9,10],[11,12]]])
+#
+# print np.vstack((a,b))
+#
+# # b = np.array([[[11,11]],[[11,11]]])
+# #
+# # print a.shape
+# # print b.shape
+# #
+# # print np.hstack((a,b))
+# print eval('a.shape')
