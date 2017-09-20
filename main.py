@@ -14,7 +14,7 @@ from caffe.io import datum_to_array
 import matplotlib.pyplot as plt
 from scipy.misc import toimage
 from google.protobuf import text_format
-from rms import SLDataSet, train_msrl
+from rms import SLDataSet, train_mrsl
 
 
 def generate_mean_image():
@@ -102,7 +102,7 @@ def apply(deploy_path, npz_path, caffemodel_path, params, use_rms=True, use_l2=F
     M = None
     if use_rms:
         train_data_set = SLDataSet({'train_X': cnn_train_X_a, 'train_X_plus': cnn_train_X_p, 'train_X_minus': cnn_train_X_m})
-        M = train_msrl(train_data_set, params)
+        M = train_mrsl(train_data_set, params)
     print 'M:'
     print M
 

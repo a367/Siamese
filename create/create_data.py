@@ -450,8 +450,8 @@ def create_person_reid_triplet_train_test_data(npz_path):
 
     train_X1 = src['src_train_X'][0, 0, :, :]
     train_X2 = src['src_train_X'][0, 1, :, :]
-    test_X = src['src_test_X'][0]
-    test_Y = src['src_test_Y'][0]
+    test_X1 = src['src_test_X'][0][0]
+    test_X2 = src['src_test_X'][0][1]
 
     num = train_X1.shape[0]
 
@@ -475,17 +475,17 @@ def create_person_reid_triplet_train_test_data(npz_path):
     triplet_X = triplet_X[:, random_idx, :]
 
     print 'triplet_X shape:', triplet_X.shape
-    print 'test_X shape:', test_X.shape
-    print 'test_Y shape:', test_Y.shape
+    print 'test_X1 shape:', test_X1.shape
+    print 'test_X2 shape:', test_X2.shape
 
-    np.savez('data/person-reid/triplet_viper.npz', triplet_X=triplet_X, test_X=test_X, test_Y=test_Y)
+    np.savez('data/person-reid/src_triplet_viper.npz', train_a=triplet_X[0], train_p=triplet_X[1], train_n=triplet_X[2], test_X1=test_X1, test_X2=test_X2)
 
 
 def create_person_reid_small_triplet_data(l1_norm=True):
     src = np.load('data/person-reid/triplet_viper.npz')
     triplet_X = src['triplet_X']
-    num = triplet_X.shape[1]
-    triplet_X = triplet_X[:, :num / 10, :]
+    # num = triplet_X.shape[1]
+    # triplet_X = triplet_X[:, :num / 10, :]
 
     train_a = triplet_X[0, :, :]
     train_p = triplet_X[1, :, :]
@@ -500,7 +500,59 @@ def create_person_reid_small_triplet_data(l1_norm=True):
             exec '%s = (%s / np.sum(np.abs(%s), axis=1).reshape(-1, 1))' % (data_name, data_name, data_name)
         print '%s shape: %s' % (data_name, eval('%s.shape' % data_name))
 
-    np.savez('data/person-reid/small_triplet_viper.npz', **dict([(n, eval(n)) for n in data_list]))
+    np.savez('data/person-reid/triplet_viper.npz', **dict([(n, eval(n)) for n in data_list]))
+
+
+def create_person_reid_train_mat():
+    data = np.load('data/person-reid/viper.npz')
+    train_X1 = data['src_train_X'][0, 0, :, :]
+    train_X2 = data['src_train_X'][0, 1, :, :]
+    num = train_X1.shape[0]
+    train_X = np.vstack((train_X1, train_X2))
+    train_Y = np.array(range(num) + range(num))
+
+    print 'train_X shape:', train_X.shape
+    print 'train_Y shape:', train_Y.shape
+    print train_Y
+
+    sio.savemat('data/person-reid/train_viper.mat', {'train_X': train_X, 'train_Y': train_Y})
+
+
+def create_small_person_reid_triplet_LFDA_data():
+    src = np.load('data/person-reid/src_triplet_viper.npz')
+    num = src['train_a'].shape[0] / 10
+
+    W = sio.loadmat('data/person-reid/PP.mat')['PP']
+    data_list = ['train_a', 'train_p', 'train_n', 'test_X1', 'test_X2']
+
+    for data_name in data_list:
+        exec "%s = np.dot(src['%s'][:num], W)" % (data_name, data_name)
+        print '%s shape: %s' % (data_name, eval('%s.shape' % data_name))
+
+    data_list.append('W')
+    np.savez('data/person-reid/small_LFDA_triplet_viper.npz', **dict([(n, eval(n)) for n in data_list]))
+
+
+def create_person_reid_triplet_LFDA_data():
+    src = np.load('data/person-reid/src_triplet_viper.npz')
+
+    W = sio.loadmat('data/person-reid/PP.mat')['PP']
+    data_list = ['train_a', 'train_p', 'train_n', 'test_X1', 'test_X2']
+
+    for data_name in data_list:
+        exec "%s = np.dot(src['%s'], W)" % (data_name, data_name)
+        print '%s shape: %s' % (data_name, eval('%s.shape' % data_name))
+
+    data_list.append('W')
+    np.savez('data/person-reid/LFDA_triplet_viper.npz', **dict([(n, eval(n)) for n in data_list]))
+
+
+def create_person_reid_train_data():
+    data = np.load('data/person-reid/viper.npz')
+    train_X1 = data['src_train_X'][0, 0, :, :]
+    train_X2 = data['src_train_X'][0, 1, :, :]
+
+    np.savez('data/person-reid/train_viper.npz', train_X1=train_X1, train_X2=train_X2)
 
 
 def main():
@@ -512,8 +564,11 @@ def main():
     # create_test_lfw_data('data/lfw/contrastive_lfw.npz')
     # create_person_reid_train_test_data('data/person-reid/viper_mix.mat')
     # create_person_reid_triplet_train_test_data('data/person-reid/viper.npz')
-    create_person_reid_small_triplet_data()
+    # create_person_reid_small_triplet_data()
 
+    # create_person_reid_train_mat()
+    # create_person_reid_triplet_LFDA_data()
+    create_person_reid_train_data()
     pass
 
 

@@ -6,6 +6,7 @@
 import os
 import lmdb
 import random
+import json
 import numpy as np
 import caffe
 from caffe.proto import caffe_pb2
@@ -56,3 +57,8 @@ from scipy.misc import toimage
 # #
 # # print np.hstack((a,b))
 # print eval('a.shape')
+
+s = '["中国"]'
+print repr(s)
+m = json.loads(s)
+print repr(m[0])
